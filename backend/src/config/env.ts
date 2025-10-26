@@ -1,9 +1,21 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config'
+import { z } from 'zod'
 
-export const env = {
-  PORT: parseInt(process.env.PORT || '8080', 10),
-  JWT_SECRET: process.env.JWT_SECRET || 'dev-secret',
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  COOKIE_SECURE: (process.env.COOKIE_SECURE || 'false') === 'true'
-};
+const schema = z.object({
+  // server
+  PORT: z.coerce.number().default(8080),
+
+  // auth
+  JWT_SECRET: z.string(),
+
+  // CORS
+  CLIENT_ORIGIN: z.string().optional(),   // legacy single-origin
+  CORS_ORIGINS: z.string().optional(),    // comma-separated list of origins
+
+  // cookies
+  COOKIE_SECURE: z.coerce.boolean().default(false),
+  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+})
+
+export const env = schema.parse(process.env)
+export type Env = z.infer<typeof schema>
